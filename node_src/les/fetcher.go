@@ -27,8 +27,8 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/fetcher"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/les/fetcher"
 	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/enode"
@@ -153,9 +153,7 @@ type lightFetcher struct {
 	synchronise func(peer *serverPeer)
 
 	// Test fields or hooks
-	noAnnounce  bool
 	newHeadHook func(*types.Header)
-	newAnnounce func(*serverPeer, *announceData)
 }
 
 // newLightFetcher creates a light fetcher instance.
@@ -443,6 +441,14 @@ func (f *lightFetcher) mainloop() {
 			if ulc {
 				head := f.chain.CurrentHeader()
 				ancestor := rawdb.FindCommonAncestor(f.chaindb, origin, head)
+
+				// Recap the ancestor with genesis header in case the ancestor
+				// is not found. It can happen the original head is before the
+				// checkpoint while the synced headers are after it. In this
+				// case there is no ancestor between them.
+				if ancestor == nil {
+					ancestor = f.chain.Genesis().Header()
+				}
 				var untrusted []common.Hash
 				for head.Number.Cmp(ancestor.Number) > 0 {
 					hash, number := head.Hash(), head.Number.Uint64()
@@ -451,6 +457,9 @@ func (f *lightFetcher) mainloop() {
 					}
 					untrusted = append(untrusted, hash)
 					head = f.chain.GetHeader(head.ParentHash, number-1)
+					if head == nil {
+						break // all the synced headers will be dropped
+					}
 				}
 				if len(untrusted) > 0 {
 					for i, j := 0, len(untrusted)-1; i < j; i, j = i+1, j-1 {
@@ -474,12 +483,6 @@ func (f *lightFetcher) mainloop() {
 
 // announce processes a new announcement message received from a peer.
 func (f *lightFetcher) announce(p *serverPeer, head *announceData) {
-	if f.newAnnounce != nil {
-		f.newAnnounce(p, head)
-	}
-	if f.noAnnounce {
-		return
-	}
 	select {
 	case f.announceCh <- &announce{peerid: p.ID(), trust: p.trusted, data: head}:
 	case <-f.closeCh:
@@ -522,7 +525,7 @@ func (f *lightFetcher) requestHeaderByHash(peerid enode.ID) func(common.Hash) er
 	}
 }
 
-// requestResync invokes synchronisation callback to start syncing.
+//  startSync invokes synchronisation callback to start syncing.
 func (f *lightFetcher) startSync(id enode.ID) {
 	defer func(header *types.Header) {
 		f.syncDone <- header

@@ -22,6 +22,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	mrand "math/rand"
 	"sort"
 	"sync"
 	"testing"
@@ -29,13 +30,14 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
+	"github.com/ethereum/go-ethereum/trie/testutil"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -245,7 +247,7 @@ func defaultAccountRequestHandler(t *testPeer, id uint64, root common.Hash, orig
 func createAccountRequestResponse(t *testPeer, root common.Hash, origin common.Hash, limit common.Hash, cap uint64) (keys []common.Hash, vals [][]byte, proofs [][]byte) {
 	var size uint64
 	if limit == (common.Hash{}) {
-		limit = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+		limit = common.MaxHash
 	}
 	for _, entry := range t.accountValues {
 		if size > cap {
@@ -310,7 +312,7 @@ func createStorageRequestResponse(t *testPeer, root common.Hash, accounts []comm
 		if len(origin) > 0 {
 			originHash = common.BytesToHash(origin)
 		}
-		var limitHash = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+		var limitHash = common.MaxHash
 		if len(limit) > 0 {
 			limitHash = common.BytesToHash(limit)
 		}
@@ -1349,7 +1351,7 @@ func makeAccountTrieNoStorage(n int) (*trie.Trie, entrySlice) {
 	accTrie, _ := trie.New(common.Hash{}, db)
 	var entries entrySlice
 	for i := uint64(1); i <= uint64(n); i++ {
-		value, _ := rlp.EncodeToBytes(state.Account{
+		value, _ := rlp.EncodeToBytes(types.StateAccount{
 			Nonce:    i,
 			Balance:  big.NewInt(int64(i)),
 			Root:     emptyRoot,
@@ -1387,14 +1389,14 @@ func makeBoundaryAccountTrie(n int) (*trie.Trie, entrySlice) {
 	for i := 0; i < accountConcurrency; i++ {
 		last := common.BigToHash(new(big.Int).Add(next.Big(), step))
 		if i == accountConcurrency-1 {
-			last = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+			last = common.MaxHash
 		}
 		boundaries = append(boundaries, last)
 		next = common.BigToHash(new(big.Int).Add(last.Big(), common.Big1))
 	}
 	// Fill boundary accounts
 	for i := 0; i < len(boundaries); i++ {
-		value, _ := rlp.EncodeToBytes(state.Account{
+		value, _ := rlp.EncodeToBytes(types.StateAccount{
 			Nonce:    uint64(0),
 			Balance:  big.NewInt(int64(i)),
 			Root:     emptyRoot,
@@ -1406,7 +1408,7 @@ func makeBoundaryAccountTrie(n int) (*trie.Trie, entrySlice) {
 	}
 	// Fill other accounts if required
 	for i := uint64(1); i <= uint64(n); i++ {
-		value, _ := rlp.EncodeToBytes(state.Account{
+		value, _ := rlp.EncodeToBytes(types.StateAccount{
 			Nonce:    i,
 			Balance:  big.NewInt(int64(i)),
 			Root:     emptyRoot,
@@ -1442,7 +1444,7 @@ func makeAccountTrieWithStorageWithUniqueStorage(accounts, slots int, code bool)
 		stTrie, stEntries := makeStorageTrieWithSeed(uint64(slots), i, db)
 		stRoot := stTrie.Hash()
 		stTrie.Commit(nil)
-		value, _ := rlp.EncodeToBytes(state.Account{
+		value, _ := rlp.EncodeToBytes(types.StateAccount{
 			Nonce:    i,
 			Balance:  big.NewInt(int64(i)),
 			Root:     stRoot,
@@ -1489,7 +1491,7 @@ func makeAccountTrieWithStorage(accounts, slots int, code, boundary bool) (*trie
 		if code {
 			codehash = getCodeHash(i)
 		}
-		value, _ := rlp.EncodeToBytes(state.Account{
+		value, _ := rlp.EncodeToBytes(types.StateAccount{
 			Nonce:    i,
 			Balance:  big.NewInt(int64(i)),
 			Root:     stRoot,
@@ -1551,7 +1553,7 @@ func makeBoundaryStorageTrie(n int, db *trie.Database) (*trie.Trie, entrySlice) 
 	for i := 0; i < accountConcurrency; i++ {
 		last := common.BigToHash(new(big.Int).Add(next.Big(), step))
 		if i == accountConcurrency-1 {
-			last = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+			last = common.MaxHash
 		}
 		boundaries = append(boundaries, last)
 		next = common.BigToHash(new(big.Int).Add(last.Big(), common.Big1))
