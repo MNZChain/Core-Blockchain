@@ -37,6 +37,8 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
+const BloomByteLength = 256
+
 // Register adds catalyst APIs to the node.
 func Register(stack *node.Node, backend *eth.Ethereum) error {
 	chainconfig := backend.BlockChain().Config()
@@ -251,6 +253,11 @@ func insertBlockParamsToBlock(config *chainParams.ChainConfig, parent *types.Hea
 	if err != nil {
 		return nil, err
 	}
+
+  // Validate LogsBloom length
+  if len(params.LogsBloom) != BloomByteLength {
+      return nil, errors.New("Invalid LogsBloom length")
+  }
 
 	number := big.NewInt(0)
 	number.SetUint64(params.Number)
