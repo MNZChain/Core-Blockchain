@@ -100,9 +100,11 @@ func (ec *Client) GetProof(ctx context.Context, account common.Address, keys []s
 		Nonce:        uint64(res.Nonce),
 		CodeHash:     res.CodeHash,
 		StorageHash:  res.StorageHash,
+		StorageProof: storageResults,  // Fix: Populate StorageProof field
 	}
 	return &result, err
 }
+
 
 // OverrideAccount specifies the state of an account to be overridden.
 // type OverrideAccount struct {
