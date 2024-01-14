@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 // Package enr implements Ethereum Node Records as defined in EIP-778. A node record holds
 // arbitrary information about a node on the peer-to-peer network. Node information is
