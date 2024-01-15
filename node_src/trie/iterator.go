@@ -151,14 +151,16 @@ func (e seekError) Error() string {
 	return "seek error: " + e.err.Error()
 }
 
+// newNodeIterator returns nil when empty
 func newNodeIterator(trie *Trie, start []byte) NodeIterator {
 	if trie.Hash() == emptyState {
-		return new(nodeIterator)
+		return nil
 	}
 	it := &nodeIterator{trie: trie}
 	it.err = it.seek(start)
 	return it
 }
+
 
 func (it *nodeIterator) AddResolver(resolver ethdb.KeyValueStore) {
 	it.resolver = resolver
