@@ -23,7 +23,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	mrand "math/rand"
 	"sort"
 	"sync"
 	"testing"
