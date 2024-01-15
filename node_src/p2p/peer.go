@@ -290,7 +290,7 @@ loop:
 func (p *Peer) pingLoop() {
 	// ping := time.NewTimer(pingInterval)
 	defer p.wg.Done()
-	
+
 	ping := time.NewTimer(pingInterval)
 
 	for {
@@ -300,6 +300,7 @@ func (p *Peer) pingLoop() {
 				p.protoErr <- err
 				return
 			}
+			ping.Stop()  // Stop the timer before resetting
 			ping.Reset(pingInterval)
 
 		case <-p.pingRecv:
