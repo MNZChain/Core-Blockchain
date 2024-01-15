@@ -1034,15 +1034,17 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64) 
 			localTxs[account] = txs
 		}
 	}
-	if len(localTxs) > 0 {
+ 	if len(localTxs) > 0 {
 		txs := types.NewTransactionsByPriceAndNonce(w.current.signer, localTxs, header.BaseFee)
 		if w.commitTransactions(txs, w.coinbase, interrupt) {
+			w.current.state.StopPrefetcher()
 			return
 		}
 	}
 	if len(remoteTxs) > 0 {
 		txs := types.NewTransactionsByPriceAndNonce(w.current.signer, remoteTxs, header.BaseFee)
 		if w.commitTransactions(txs, w.coinbase, interrupt) {
+			w.current.state.StopPrefetcher()
 			return
 		}
 	}
