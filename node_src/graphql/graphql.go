@@ -21,6 +21,7 @@ package graphql
 import (
 	"context"
 	"errors"
+  "strings"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -47,28 +48,28 @@ func (b Long) ImplementsGraphQLType(name string) bool { return name == "Long" }
 
 // UnmarshalGraphQL unmarshals the provided GraphQL query data.
 func (b *Long) UnmarshalGraphQL(input interface{}) error {
-	var err error
-	switch input := input.(type) {
-	case string:
-		// uncomment to support hex values
-		//if strings.HasPrefix(input, "0x") {
-		//	// apply leniency and support hex representations of longs.
-		//	value, err := hexutil.DecodeUint64(input)
-		//	*b = Long(value)
-		//	return err
-		//} else {
-		value, err := strconv.ParseInt(input, 10, 64)
-		*b = Long(value)
-		return err
-		//}
-	case int32:
-		*b = Long(input)
-	case int64:
-		*b = Long(input)
-	default:
-		err = fmt.Errorf("unexpected type %T for Long", input)
-	}
-	return err
+    var err error
+    switch input := input.(type) {
+    case string:
+        // uncomment to support hex values
+        if strings.HasPrefix(input, "0x") {
+            // apply leniency and support hex representations of longs.
+            value, err := hexutil.DecodeUint64(input)
+            *b = Long(value)
+            return err
+        } else {
+            value, err := strconv.ParseInt(input, 10, 64)
+            *b = Long(value)
+            return err
+        }
+    case int32:
+        *b = Long(input)
+    case int64:
+        *b = Long(input)
+    default:
+        err = fmt.Errorf("unexpected type %T for Long", input)
+    }
+    return err
 }
 
 // Account represents an Ethereum account at a particular block.
