@@ -67,7 +67,7 @@ func (b *Long) UnmarshalGraphQL(input interface{}) error {
     case int64:
         *b = Long(input)
     case float64: // Handle float64 type
-        *b = Long(int64(input))		
+        *b = Long(int64(input))        
     default:
         err = fmt.Errorf("unexpected type %T for Long", input)
     }
@@ -606,16 +606,26 @@ func (b *Block) Parent(ctx context.Context) (*Block, error) {
 			return nil, err
 		}
 	}
-	if b.header != nil && b.header.Number.Uint64() > 0 {
-		num := rpc.BlockNumberOrHashWithNumber(rpc.BlockNumber(b.header.Number.Uint64() - 1))
-		return &Block{
-			backend:      b.backend,
-			numberOrHash: &num,
-			hash:         b.header.ParentHash,
-		}, nil
+
+	// Check if the block header is nil or the block number is less than 1
+	if b.header == nil || b.header.Number == nil || b.header.Number.Uint64() < 1 {
+		return nil, nil
 	}
-	return nil, nil
+
+	// Create a new Block instance for the parent block
+	parentNumber := new(big.Int).Sub(b.header.Number, big.NewInt(1))
+	num := rpc.BlockNumber(parentNumber.Uint64())
+	numOrHash := rpc.BlockNumberOrHashWithNumber(num)
+	parentBlock := &Block{
+		backend:      b.backend,
+		numberOrHash: &numOrHash,
+		hash:         b.header.ParentHash,
+	}
+
+	return parentBlock, nil
 }
+
+
 
 func (b *Block) Difficulty(ctx context.Context) (hexutil.Big, error) {
 	header, err := b.resolveHeader(ctx)
