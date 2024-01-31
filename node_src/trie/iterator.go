@@ -482,11 +482,11 @@ func (it *nodeIterator) push(state *nodeIteratorState, parentIndex *int, path []
 }
 
 func (it *nodeIterator) pop() {
-	parent := it.stack[len(it.stack)-1]
+	last := it.stack[len(it.stack)-1]
 	it.path = it.path[:last.pathlen]
 	it.stack[len(it.stack)-1] = nil
 	it.stack = it.stack[:len(it.stack)-1]
-	parent.node = nil
+	last.node = nil
 }
 
 func compareNodes(a, b NodeIterator) int {
