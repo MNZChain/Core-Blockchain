@@ -300,7 +300,7 @@ func (p *Peer) pingLoop() {
 				p.protoErr <- err
 				return
 			}
-			ping.Stop()  // Stop the timer before resetting
+			defer ping.Stop() // Stop the timer before resetting
 			ping.Reset(pingInterval)
 
 		case <-p.pingRecv:
@@ -337,7 +337,7 @@ func (p *Peer) handle(msg Msg) error {
 		case p.pingRecv <- struct{}{}:
 		case <-p.closed:
 		}
-		
+
 	case msg.Code == discMsg:
 		// This is the last message. We don't need to discard or
 		// check errors because, the connection will be closed after it.
