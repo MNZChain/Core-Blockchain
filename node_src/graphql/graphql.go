@@ -21,10 +21,10 @@ package graphql
 import (
 	"context"
 	"errors"
-  "strings"
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -48,30 +48,30 @@ func (b Long) ImplementsGraphQLType(name string) bool { return name == "Long" }
 
 // UnmarshalGraphQL unmarshals the provided GraphQL query data.
 func (b *Long) UnmarshalGraphQL(input interface{}) error {
-    var err error
-    switch input := input.(type) {
-    case string:
-        // uncomment to support hex values
-        if strings.HasPrefix(input, "0x") {
-            // apply leniency and support hex representations of longs.
-            value, err := hexutil.DecodeUint64(input)
-            *b = Long(value)
-            return err
-        } else {
-            value, err := strconv.ParseInt(input, 10, 64)
-            *b = Long(value)
-            return err
-        }
-    case int32:
-        *b = Long(input)
-    case int64:
-        *b = Long(input)
-    case float64: // Handle float64 type
-        *b = Long(int64(input))        
-    default:
-        err = fmt.Errorf("unexpected type %T for Long", input)
-    }
-    return err
+	var err error
+	switch input := input.(type) {
+	case string:
+		// uncomment to support hex values
+		if strings.HasPrefix(input, "0x") {
+			// apply leniency and support hex representations of longs.
+			value, err := hexutil.DecodeUint64(input)
+			*b = Long(value)
+			return err
+		} else {
+			value, err := strconv.ParseInt(input, 10, 64)
+			*b = Long(value)
+			return err
+		}
+	case int32:
+		*b = Long(input)
+	case int64:
+		*b = Long(input)
+	case float64: // Handle float64 type
+		*b = Long(int64(input))
+	default:
+		err = fmt.Errorf("unexpected type %T for Long", input)
+	}
+	return err
 }
 
 // Account represents an Ethereum account at a particular block.
@@ -601,31 +601,25 @@ func (b *Block) BaseFeePerGas(ctx context.Context) (*hexutil.Big, error) {
 
 func (b *Block) Parent(ctx context.Context) (*Block, error) {
 	// If the block header hasn't been fetched, and we'll need it, fetch it.
-	if b.numberOrHash == nil && b.header == nil {
-		if _, err := b.resolveHeader(ctx); err != nil {
-			return nil, err
-		}
+
+	if _, err := b.resolveHeader(ctx); err != nil {
+		return nil, err
 	}
 
 	// Check if the block header is nil or the block number is less than 1
-	if b.header == nil || b.header.Number == nil || b.header.Number.Uint64() < 1 {
+	if b.header == nil || b.header.Number.Uint64() < 1 {
 		return nil, nil
 	}
 
-	// Create a new Block instance for the parent block
-	parentNumber := new(big.Int).Sub(b.header.Number, big.NewInt(1))
-	num := rpc.BlockNumber(parentNumber.Uint64())
-	numOrHash := rpc.BlockNumberOrHashWithNumber(num)
+	num := rpc.BlockNumberOrHashWithNumber(rpc.BlockNumber(b.header.Number.Uint64() - 1))
 	parentBlock := &Block{
 		backend:      b.backend,
-		numberOrHash: &numOrHash,
+		numberOrHash: &num,
 		hash:         b.header.ParentHash,
 	}
 
 	return parentBlock, nil
 }
-
-
 
 func (b *Block) Difficulty(ctx context.Context) (hexutil.Big, error) {
 	header, err := b.resolveHeader(ctx)
