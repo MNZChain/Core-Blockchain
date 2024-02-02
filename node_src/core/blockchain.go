@@ -2130,12 +2130,15 @@ func (bc *BlockChain) maintainTxIndex(ancients uint64) {
 			return
 		}
 		// If a previous indexing existed, make sure that we fill in any missing entries
-    if bc.txLookupLimit == 0 || head < bc.txLookupLimit {
-        if *tail > 0 {
-            rawdb.IndexTransactions(bc.db, 0, head+1, bc.quit) 
-        }
-        return
-    }
+		if bc.txLookupLimit == 0 || head < bc.txLookupLimit {
+			end := *tail
+			if end > head+1 {
+				end = head + 1
+			}
+			rawdb.IndexTransactions(bc.db, 0, end, bc.quit)
+			return
+		}
+
 		// Update the transaction index to the new chain state
 		if head-bc.txLookupLimit+1 < *tail {
 			// Reindex a part of missing indices and rewind index tail to HEAD-limit
