@@ -154,7 +154,7 @@ func (e seekError) Error() string {
 // newNodeIterator returns nil when empty
 func newNodeIterator(trie *Trie, start []byte) NodeIterator {
 	if trie.Hash() == emptyState {
-		return nil
+		return new(nodeIterator)
 	}
 	it := &nodeIterator{trie: trie}
 	it.err = it.seek(start)
