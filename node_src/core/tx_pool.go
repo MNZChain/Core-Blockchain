@@ -1525,6 +1525,16 @@ func (pool *TxPool) truncatePending() {
 	pendingRateLimitMeter.Mark(int64(pendingBeforeCap - pending))
 }
 
+func (pool *TxPool) QueueCount() uint64 {
+	pool.mu.Lock()
+	defer pool.mu.Unlock()
+	count := 0
+	for _, list := range pool.queue {
+		count += list.Len()
+	}
+	return uint64(count)
+}
+
 // truncateQueue drops the oldest transactions in the queue if the pool is above the global queue limit.
 func (pool *TxPool) truncateQueue() {
 	queued := uint64(0)
@@ -1569,6 +1579,7 @@ func (pool *TxPool) truncateQueue() {
 		}
 	}
 }
+
 // demoteUnexecutables removes invalid and processed transactions from the pools
 // executable/pending queue and any subsequent transactions that become unexecutable
 // are moved back into the future queue.

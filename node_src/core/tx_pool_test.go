@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 package core
 
@@ -2402,6 +2401,50 @@ func TestTransactionStatusCheck(t *testing.T) {
 			t.Errorf("transaction %d: status mismatch: have %v, want %v", i, statuses[i], expect[i])
 		}
 	}
+}
+
+func TestTruncateQueue(t *testing.T) {
+	t.Parallel()
+
+	// Setup the pool with specific global queue limits
+	statedb, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+	blockchain := &testBlockChain{1000000, statedb, new(event.Feed)}
+	config := testTxPoolConfig
+	config.GlobalQueue = 5 // Set a manageable limit for the test
+
+	pool := NewTxPool(config, params.TestChainConfig, blockchain)
+	defer pool.Stop()
+
+	// Create a test account and fund it
+	key, _ := crypto.GenerateKey()
+	addr := crypto.PubkeyToAddress(key.PublicKey)
+	testAddBalance(pool, addr, big.NewInt(1000000))
+
+	// Generate transactions to exceed the global queue limit
+	txs := types.Transactions{}
+	for j := 0; j < int(config.GlobalQueue)*2; j++ { // Add twice the limit to ensure overflow
+		txs = append(txs, transaction(uint64(j), 100000, key))
+	}
+
+	// Import the transactions as remote, simulating that they are from other nodes
+	// This should put them into the queue, not the pool directly, due to the balance limit
+	pool.AddRemotesSync(txs)
+
+	// Verify pool queue size before truncation
+	if pool.QueueCount() <= config.GlobalQueue {
+		t.Fatalf("Expected queue to exceed the limit before truncation, found %d transactions", pool.QueueCount())
+	}
+
+	// Invoke truncateQueue to enforce the queue limit
+	pool.truncateQueue()
+
+	// Verify the pool queue size after truncation
+	if pool.QueueCount() > config.GlobalQueue {
+		t.Errorf("Expected queue to be within the limit after truncation, found %d transactions", pool.QueueCount())
+	}
+
+	// Optionally, verify that the remaining transactions are the ones expected
+	// This could involve checking the nonces or sender addresses of the transactions that remain in the queue
 }
 
 // Test the transaction slots consumption is computed correctly
