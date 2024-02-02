@@ -373,8 +373,6 @@ func (m *MockEthAPIBackend) HeaderByNumberOrHash(ctx context.Context, bnOrHash r
 	return args.Get(0).(*types.Header), args.Error(1)
 }
 
-// Other methods from ethapi.Backend that are used by your Block.Parent method should also be mocked here.
-
 func TestBlockParent(t *testing.T) {
 	ctx := context.Background()
 	mockBackend := new(MockEthAPIBackend)
