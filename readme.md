@@ -44,7 +44,7 @@ Blockchain call system contracts：
 - At the end of each epoch, the `Validators` contract is called to update active validators, based on the ranking.
 
 ## Staking
-For any account, any number of coins can be staked to the validator, and the minimum staking amount for each validator is `32 NETZ`.
+For any account, any number of coins can be staked to the validator, and the minimum staking amount for each validator is `1000000 NETZ`.
 If you want to unstake, you need to do the following:
 1. Send an unstaking transaction for a validator to the `Validators` contract;
 2. Waiting for `86400` blocks before sending a transaction to `Validators` contract to withdraw all staking coins on this validator;
