@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+  "github.com/ethereum/go-ethereum/signer/core/apitypes"
 )
 
 func TestBytesPadding(t *testing.T) {

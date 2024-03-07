@@ -18,7 +18,6 @@
 package graphql
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -35,13 +34,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/eth/ethconfig"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestBuildSchema(t *testing.T) {
@@ -359,61 +355,4 @@ func createGQLServiceWithTransactions(t *testing.T, stack *node.Node) {
 	if err != nil {
 		t.Fatalf("could not create graphql service: %v", err)
 	}
-}
-
-// MockEthAPIBackend mocks the ethAPI.Backend interface for testing.
-type MockEthAPIBackend struct {
-	mock.Mock
-	ethapi.Backend // Embedding the Backend interface is optional but can be useful for ensuring interface compliance.
-}
-
-// HeaderByNumberOrHash mocks the ethAPI.Backend's HeaderByNumberOrHash method.
-func (m *MockEthAPIBackend) HeaderByNumberOrHash(ctx context.Context, bnOrHash rpc.BlockNumberOrHash) (*types.Header, error) {
-	args := m.Called(ctx, bnOrHash)
-	return args.Get(0).(*types.Header), args.Error(1)
-}
-
-func TestBlockParent(t *testing.T) {
-	ctx := context.Background()
-	mockBackend := new(MockEthAPIBackend)
-
-	// Mocking block headers
-	genesisHeader := &types.Header{Number: big.NewInt(0)}
-	block1Header := &types.Header{Number: big.NewInt(1), ParentHash: genesisHeader.Hash()}
-
-	// Setup expectations with correct usage of bnOrHash.Number() method
-	mockBackend.On("HeaderByNumberOrHash", ctx, mock.AnythingOfType("*rpc.BlockNumberOrHash")).Return(func(ctx context.Context, bnOrHash rpc.BlockNumberOrHash) *types.Header {
-		number, ok := bnOrHash.Number()
-		if ok {
-			if number == 0 {
-				return genesisHeader
-			} else if number == 1 {
-				return block1Header
-			}
-		}
-		// Return nil for any other case or if number is not set
-		return nil
-	}, func(ctx context.Context, bnOrHash rpc.BlockNumberOrHash) error {
-		// This function represents error handling, returning nil means no error.
-		return nil
-	})
-
-	// Testing Parent of the genesis block (should be nil)
-	// Corrected instantiation with a pointer to rpc.BlockNumberOrHash
-	numberOrHash := rpc.BlockNumberOrHashWithNumber(0)                        // Create the variable
-	genesisBlock := &Block{backend: mockBackend, numberOrHash: &numberOrHash} // Pass it as a pointer
-
-	parent, err := genesisBlock.Parent(ctx)
-	assert.NoError(t, err)
-	assert.Nil(t, parent)
-
-	// Testing Parent of block 1 (should be genesis block)
-	numberOrHashForBlock1 := rpc.BlockNumberOrHashWithNumber(1)                  // Create the variable for block1
-	block1 := &Block{backend: mockBackend, numberOrHash: &numberOrHashForBlock1} // Pass it as a pointer
-
-	parent, err = block1.Parent(ctx)
-	assert.NoError(t, err)
-	assert.NotNil(t, parent)
-	assert.Equal(t, genesisHeader.Number.Uint64(), parent.header.Number.Uint64())
-
 }

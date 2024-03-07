@@ -82,23 +82,7 @@ type StorageResult struct {
 // The block number can be nil, in which case the value is taken from the latest known block.
 func (ec *Client) GetProof(ctx context.Context, account common.Address, keys []string, blockNumber *big.Int) (*AccountResult, error) {
 
-	type storage struct {
-		Key   string       `json:"key"`
-		Value *hexutil.Big `json:"value"`
-		Proof []string     `json:"proof"`
-	}
-
-	type acc struct {
-		Address      common.Address `json:"address"`
-		AccountProof []string       `json:"accountProof"`
-		Balance      *hexutil.Big   `json:"balance"`
-		CodeHash     common.Hash    `json:"codeHash"`
-		Nonce        hexutil.Uint64 `json:"nonce"`
-		StorageHash  common.Hash    `json:"storageHash"`
-		StorageProof []storage      `json:"storageProof"`
-	}
-
-	var res acc
+	var res accountResult
 	err := ec.c.CallContext(ctx, &res, "eth_getProof", account, keys, toBlockNumArg(blockNumber))
 	// Turn hexutils back to normal datatypes
 	storageResults := make([]StorageResult, 0, len(res.StorageProof))
@@ -116,10 +100,11 @@ func (ec *Client) GetProof(ctx context.Context, account common.Address, keys []s
 		Nonce:        uint64(res.Nonce),
 		CodeHash:     res.CodeHash,
 		StorageHash:  res.StorageHash,
-		StorageProof: storageResults, // Fix: Populate StorageProof field
+		StorageProof: storageResults,  // Fix: Populate StorageProof field
 	}
 	return &result, err
 }
+
 
 // OverrideAccount specifies the state of an account to be overridden.
 // type OverrideAccount struct {

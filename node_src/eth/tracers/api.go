@@ -177,16 +177,28 @@ type TraceConfig struct {
 	Reexec  *uint64
 }
 
+type BlockOverrides struct {
+	Number      *hexutil.Big
+	Difficulty  *hexutil.Big
+	Time        *hexutil.Uint64
+	GasLimit    *hexutil.Uint64
+	Coinbase    *common.Address
+	Random      *common.Hash
+	BaseFee     *hexutil.Big
+	BlobBaseFee *hexutil.Big
+}
+
 // TraceCallConfig is the config for traceCall API. It holds one more
 // field to override the state for tracing.
 type TraceCallConfig struct {
-	*vm.LogConfig
-	Tracer         *string
-	Timeout        *string
-	Reexec         *uint64
-	StateOverrides *ethapi.StateOverride
-	BlockOverrides *BlockOverrides // Add this line
+    *vm.LogConfig
+    Tracer         *string
+    Timeout        *string
+    Reexec         *uint64
+    StateOverrides *ethapi.StateOverride
+    BlockOverrides *BlockOverrides // Add this line
 }
+
 
 // StdTraceConfig holds extra parameters to standard-json trace functions.
 type StdTraceConfig struct {
@@ -619,6 +631,8 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 		threads = len(txs)
 	}
 
+
+	
 	if api.isPoSA {
 		blockCtx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 		_ = api.posa.PreHandle(api.backend.ChainHeaderReader(), header, statedb)
