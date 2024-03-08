@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 package ethapi
 
@@ -769,9 +768,6 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 func decodeHash(s string) (common.Hash, error) {
 	if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
 		s = s[2:]
-	}
-	if (len(s) & 1) > 0 {
-		s = "0" + s
 	}
 	b, err := hex.DecodeString(s)
 	if err != nil {
@@ -1800,7 +1796,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 		fields["status"] = hexutil.Uint(receipt.Status)
 	}
 	if receipt.Logs == nil {
-		fields["logs"] = []*types.Log{}
+		fields["logs"] = [][]*types.Log{}
 	}
 	// If the ContractAddress is 20 0x0 bytes, assume it is not a contract creation
 	if receipt.ContractAddress != (common.Address{}) {

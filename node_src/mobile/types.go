@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 // Contains all the wrappers from the core/types package.
 
@@ -359,8 +358,8 @@ func NewReceiptFromJSON(data string) (*Receipt, error) {
 
 // EncodeJSON encodes a transaction receipt into a JSON data dump.
 func (r *Receipt) EncodeJSON() (string, error) {
-    data, err := json.Marshal(r.receipt)
-    return string(data), err
+	data, err := rlp.EncodeToBytes(r.receipt)
+	return string(data), err
 }
 
 // String returns a printable representation of the receipt.

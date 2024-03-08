@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 package vm
 
@@ -56,9 +55,10 @@ func (m *Memory) Set32(offset uint64, val *uint256.Int) {
 	if offset+32 > uint64(len(m.store)) {
 		panic("invalid memory: store empty")
 	}
-	// Fill in relevant bits directly without zeroing
-	b32 := val.Bytes32()
-	copy(m.store[offset:], b32[:])
+	// Zero the memory area
+	copy(m.store[offset:offset+32], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+	// Fill in relevant bits
+	val.WriteToSlice(m.store[offset:])
 }
 
 // Resize resizes the memory to size

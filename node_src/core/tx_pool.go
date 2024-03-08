@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 package core
 
@@ -1525,7 +1524,7 @@ func (pool *TxPool) truncatePending() {
 	pendingRateLimitMeter.Mark(int64(pendingBeforeCap - pending))
 }
 
-// truncateQueue drops the oldest transactions in the queue if the pool is above the global queue limit.
+// truncateQueue drops the oldes transactions in the queue if the pool is above the global queue limit.
 func (pool *TxPool) truncateQueue() {
 	queued := uint64(0)
 	for _, list := range pool.queue {
@@ -1535,7 +1534,7 @@ func (pool *TxPool) truncateQueue() {
 		return
 	}
 
-	// Sort all accounts with queued transactions by heartbeat in ascending order
+	// Sort all accounts with queued transactions by heartbeat
 	addresses := make(addressesByHeartbeat, 0, len(pool.queue))
 	for addr := range pool.queue {
 		if !pool.locals.contains(addr) { // don't drop locals
@@ -1546,10 +1545,10 @@ func (pool *TxPool) truncateQueue() {
 
 	// Drop transactions until the total is below the limit or only locals remain
 	for drop := queued - pool.config.GlobalQueue; drop > 0 && len(addresses) > 0; {
-		addr := addresses[0] // Get the address with the lowest heartbeat (oldest)
+		addr := addresses[len(addresses)-1]
 		list := pool.queue[addr.address]
 
-		addresses = addresses[1:]
+		addresses = addresses[:len(addresses)-1]
 
 		// Drop all transactions if they are less than the overflow
 		if size := uint64(list.Len()); size <= drop {
@@ -1560,15 +1559,16 @@ func (pool *TxPool) truncateQueue() {
 			queuedRateLimitMeter.Mark(int64(size))
 			continue
 		}
-		// Otherwise drop only the oldest transactions
+		// Otherwise drop only last few transactions
 		txs := list.Flatten()
-		for i := 0; i < len(txs) && drop > 0; i++ {
+		for i := len(txs) - 1; i >= 0 && drop > 0; i-- {
 			pool.removeTx(txs[i].Hash(), true)
 			drop--
 			queuedRateLimitMeter.Mark(1)
 		}
 	}
 }
+
 // demoteUnexecutables removes invalid and processed transactions from the pools
 // executable/pending queue and any subsequent transactions that become unexecutable
 // are moved back into the future queue.

@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 // Package core implements the Ethereum consensus protocol.
 package core
@@ -2130,12 +2129,12 @@ func (bc *BlockChain) maintainTxIndex(ancients uint64) {
 			return
 		}
 		// If a previous indexing existed, make sure that we fill in any missing entries
-    if bc.txLookupLimit == 0 || head < bc.txLookupLimit {
-        if *tail > 0 {
-            rawdb.IndexTransactions(bc.db, 0, head+1, bc.quit) 
-        }
-        return
-    }
+		if bc.txLookupLimit == 0 || head < bc.txLookupLimit {
+			if *tail > 0 {
+				rawdb.IndexTransactions(bc.db, 0, *tail, bc.quit)
+			}
+			return
+		}
 		// Update the transaction index to the new chain state
 		if head-bc.txLookupLimit+1 < *tail {
 			// Reindex a part of missing indices and rewind index tail to HEAD-limit

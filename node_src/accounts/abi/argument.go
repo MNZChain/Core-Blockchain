@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// bug across the project fixed by EtherAuthority <https://etherauthority.io/>
 
 package abi
 
@@ -79,11 +78,11 @@ func (arguments Arguments) isTuple() bool {
 // Unpack performs the operation hexdata -> Go format.
 func (arguments Arguments) Unpack(data []byte) ([]interface{}, error) {
 	if len(data) == 0 {
-		nonIndexedArgs := arguments.NonIndexed()
-		if len(nonIndexedArgs) != 0 {
-			return nil, fmt.Errorf("abi: attempting to unmarshall an empty string while non-indexed arguments are expected")
+		if len(arguments) != 0 {
+			return nil, fmt.Errorf("abi: attempting to unmarshall an empty string while arguments are expected")
 		}
 		// Nothing to unmarshal, return default variables
+		nonIndexedArgs := arguments.NonIndexed()
 		defaultVars := make([]interface{}, len(nonIndexedArgs))
 		for index, arg := range nonIndexedArgs {
 			defaultVars[index] = reflect.New(arg.Type.GetType())
@@ -100,9 +99,8 @@ func (arguments Arguments) UnpackIntoMap(v map[string]interface{}, data []byte) 
 		return fmt.Errorf("abi: cannot unpack into a nil map")
 	}
 	if len(data) == 0 {
-		nonIndexedArgs := arguments.NonIndexed()
-		if len(nonIndexedArgs) != 0 {
-			return fmt.Errorf("abi: attempting to unmarshall an empty string while non-indexed arguments are expected")
+		if len(arguments) != 0 {
+			return fmt.Errorf("abi: attempting to unmarshall an empty string while arguments are expected")
 		}
 		return nil // Nothing to unmarshal, return
 	}
@@ -115,7 +113,6 @@ func (arguments Arguments) UnpackIntoMap(v map[string]interface{}, data []byte) 
 	}
 	return nil
 }
-
 
 // Copy performs the operation go format -> provided struct.
 func (arguments Arguments) Copy(v interface{}, values []interface{}) error {
