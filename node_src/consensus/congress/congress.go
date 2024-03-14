@@ -603,9 +603,9 @@ func (c *Congress) Finalize(chain consensus.ChainHeaderReader, header *types.Hea
 	}
 
 	// punish validator if necessary
-	err, exec := c.slashMisbehavingValidators(chain, header, state)
+	_, exec := c.slashMisbehavingValidators(chain, header, state)
 
-	if err != nil && !exec {
+	if !exec {
 		if header.Difficulty.Cmp(diffInTurn) != 0 {
 			if err := c.tryPunishValidator(chain, header, state); err != nil {
 				panic(err)
@@ -809,7 +809,6 @@ func (c *Congress) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header
 
 	if !exec {
 		if header.Difficulty.Cmp(diffInTurn) != 0 {
-			log.Info("CALLING SECOND PUNISH VALIDATOR")
 			if err := c.tryPunishValidator(chain, header, state); err != nil {
 				panic(err)
 			}
