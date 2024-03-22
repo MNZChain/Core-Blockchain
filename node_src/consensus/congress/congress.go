@@ -1515,7 +1515,6 @@ func (c *Congress) getEventCheckRules(header *types.Header, parentState *state.S
 		return v.(map[common.Hash]*EventCheckRule), nil
 	}
 
-	// if the last updates is long ago, we don't need to get blacklist from the contract.
 	num := header.Number.Uint64()
 	lastUpdated := lastRulesUpdatedNumber(parentState)
 	if num >= 2 && num > lastUpdated+1 {
@@ -1531,7 +1530,6 @@ func (c *Congress) getEventCheckRules(header *types.Header, parentState *state.S
 		}
 	}
 
-	// can't get blacklist from cache, try to call the contract
 	alABI := c.abi[systemcontract.AddressListContractName]
 	method := "getRuleByIndex"
 	get := func(i uint32) (common.Hash, int, common.AddressCheckType, error) {
