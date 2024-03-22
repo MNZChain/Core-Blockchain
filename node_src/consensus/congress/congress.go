@@ -259,8 +259,8 @@ func (c *Congress) SetStateFn(fn StateFn) {
 // Author implements consensus.Engine, returning the Ethereum address recovered
 // from the signature in the header's extra-data section.
 func (c *Congress) Author(header *types.Header) (common.Address, error) {
-	return header.Coinbase, nil
-	// return ecrecover(header, c.signatures)
+	// return header.Coinbase, nil
+	return ecrecover(header, c.signatures)
 }
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
