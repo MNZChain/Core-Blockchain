@@ -104,7 +104,7 @@ var (
 
 	// errExtraValidators is returned if non-checkpoint block contain validator data in
 	// their extra-data fields.
-	errExtraValidators = errors.New("non-checkpoint block contains extra validator list")
+	errExtraValidators = errors.New("malformed validator addresses array")
 
 	// errInvalidExtraValidators is returned if validator data in extra-data field is invalid.
 	errInvalidExtraValidators = errors.New("Invalid extra validators in extra data field")
