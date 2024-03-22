@@ -125,12 +125,12 @@ func (c *Congress) executeProposal(chain consensus.ChainHeaderReader, header *ty
 	}
 	//make system governance transaction
 	nonce := state.GetNonce(c.validator)
-	amout := prop.Value
+	amount := prop.Value
 	if c.chainConfig.IsSophon(header.Number) {
 		// fix bug
-		amout = new(big.Int)
+		amount = new(big.Int)
 	}
-	tx := types.NewTransaction(nonce, systemcontract.SysGovToAddr, amout, header.GasLimit, new(big.Int), propRLP)
+	tx := types.NewTransaction(nonce, systemcontract.SysGovToAddr, amount, header.GasLimit, new(big.Int), propRLP)
 	tx, err = c.signTxFn(accounts.Account{Address: c.validator}, tx, chain.Config().ChainID)
 	if err != nil {
 		return nil, nil, err
@@ -155,7 +155,7 @@ func (c *Congress) replayProposal(chain consensus.ChainHeaderReader, header *typ
 		return nil, err
 	}
 	if !bytes.Equal(propRLP, tx.Data()) {
-		return nil, fmt.Errorf("data missmatch, proposalID: %s, rlp: %s, txHash:%s, txData:%s", prop.Id.String(), hexutil.Encode(propRLP), tx.Hash().String(), hexutil.Encode(tx.Data()))
+		return nil, fmt.Errorf("data mismatch, proposalID: %s, rlp: %s, txHash:%s, txData:%s", prop.Id.String(), hexutil.Encode(propRLP), tx.Hash().String(), hexutil.Encode(tx.Data()))
 	}
 	//make system governance transaction
 	nonce := state.GetNonce(sender)
