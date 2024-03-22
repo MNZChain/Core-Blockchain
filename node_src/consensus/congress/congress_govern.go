@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -15,8 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"math"
-	"math/big"
 )
 
 // Proposal is the system governance proposal info.
@@ -89,7 +90,7 @@ func (c *Congress) getPassedProposalByIndex(chain consensus.ChainHeaderReader, h
 	return prop, nil
 }
 
-//finishProposalById
+// finishProposalById
 func (c *Congress) finishProposalById(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, id *big.Int) error {
 	method := "finishProposalById"
 	data, err := c.abi[systemcontract.SysGovContractName].Pack(method, id)
@@ -175,7 +176,7 @@ func (c *Congress) executeProposalMsg(chain consensus.ChainHeaderReader, header 
 	case 1:
 		// delete code action
 		ok := state.Erase(prop.To)
-		receipt = types.NewReceipt([]byte{}, ok != true, header.GasUsed)
+		receipt = types.NewReceipt([]byte{}, !ok, header.GasUsed)
 		log.Info("executeProposalMsg", "action", "erase", "id", prop.Id.String(), "to", prop.To, "txHash", txHash.String(), "success", ok)
 	default:
 		receipt = types.NewReceipt([]byte{}, true, header.GasUsed)
