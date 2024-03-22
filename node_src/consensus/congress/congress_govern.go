@@ -95,7 +95,7 @@ func (c *Congress) finishProposalById(chain consensus.ChainHeaderReader, header 
 	method := "finishProposalById"
 	data, err := c.abi[systemcontract.SysGovContractName].Pack(method, id)
 	if err != nil {
-		log.Error("Can't pack data for getPassedProposalByIndex", "error", err)
+		log.Error("Can't pack data for finishProposalById", "error", err)
 		return err
 	}
 
