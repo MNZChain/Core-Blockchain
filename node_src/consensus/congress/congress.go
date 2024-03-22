@@ -1419,9 +1419,10 @@ func (c *Congress) getBlacklist(header *types.Header, parentState *state.StateDB
 
 	c.blLock.Lock()
 	defer c.blLock.Unlock()
-	if v, ok := c.blacklists.Get(header.ParentHash); ok {
-		return v.(map[common.Address]blacklistDirection), nil
-	}
+
+	// if v, ok := c.blacklists.Get(header.ParentHash); ok {
+	// 	return v.(map[common.Address]blacklistDirection), nil
+	// }
 
 	// if the last updates is long ago, we don't need to get blacklist from the contract.
 	if c.chainConfig.SophonBlock != nil && header.Number.Cmp(c.chainConfig.SophonBlock) > 0 {
@@ -1511,9 +1512,10 @@ func (c *Congress) getEventCheckRules(header *types.Header, parentState *state.S
 
 	c.rulesLock.Lock()
 	defer c.rulesLock.Unlock()
-	if v, ok := c.eventCheckRules.Get(header.ParentHash); ok {
-		return v.(map[common.Hash]*EventCheckRule), nil
-	}
+
+	// if v, ok := c.eventCheckRules.Get(header.ParentHash); ok {
+	// 	return v.(map[common.Hash]*EventCheckRule), nil
+	// }
 
 	num := header.Number.Uint64()
 	lastUpdated := lastRulesUpdatedNumber(parentState)
