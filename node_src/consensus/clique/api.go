@@ -196,8 +196,8 @@ func (sb *blockNumberOrHashOrRLP) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &input); err != nil {
 		return err
 	}
-	dcd, err := hexutil.Decode(input)
-	sb.RLP = dcd
+	decoded, err := hexutil.Decode(input)
+	sb.RLP = decoded
 
 	if err != nil {
 		// Return error if decoding fails
