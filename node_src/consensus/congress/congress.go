@@ -299,6 +299,16 @@ func (c *Congress) verifyHeader(chain consensus.ChainHeaderReader, header *types
 	}
 	number := header.Number.Uint64()
 
+	prevHeader := chain.GetHeaderByNumber(number - 1)
+	if prevHeader == nil {
+		return errors.New("header for block number not found")
+	}
+
+	// Potential malicious double signed block
+	if prevHeader.Coinbase == header.Coinbase && prevHeader.ParentHash == header.ParentHash && prevHeader.Number.Uint64() == number {
+		return errors.New("potential malicious block, skipping")
+	}
+
 	// Don't waste time checking blocks from the future
 	if header.Time > uint64(time.Now().Unix()) {
 		return consensus.ErrFutureBlock
@@ -775,8 +785,7 @@ func (c *Congress) slashMisbehavingValidators(chain consensus.ChainHeaderReader,
 		return errors.New("hrader for genesis block not found"), false
 	}
 
-	if prevHeader.Coinbase == outTurnValidator {
-		log.Info("INSIDE previousHeader and current Validator checking")
+	if prevHeader.Coinbase == outTurnValidator && prevHeader.ParentHash == header.ParentHash && prevHeader.Number.Uint64() == number {
 		if genesisHeader.Coinbase == outTurnValidator {
 			return nil, false
 		}
