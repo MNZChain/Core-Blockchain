@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -18,6 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
+	"math"
+	"math/big"
 )
 
 // Proposal is the system governance proposal info.
@@ -90,12 +89,12 @@ func (c *Congress) getPassedProposalByIndex(chain consensus.ChainHeaderReader, h
 	return prop, nil
 }
 
-// finishProposalById
+//finishProposalById
 func (c *Congress) finishProposalById(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, id *big.Int) error {
 	method := "finishProposalById"
 	data, err := c.abi[systemcontract.SysGovContractName].Pack(method, id)
 	if err != nil {
-		log.Error("Can't pack data for finishProposalById", "error", err)
+		log.Error("Can't pack data for getPassedProposalByIndex", "error", err)
 		return err
 	}
 
@@ -125,12 +124,12 @@ func (c *Congress) executeProposal(chain consensus.ChainHeaderReader, header *ty
 	}
 	//make system governance transaction
 	nonce := state.GetNonce(c.validator)
-	amount := prop.Value
+	amout := prop.Value
 	if c.chainConfig.IsSophon(header.Number) {
 		// fix bug
-		amount = new(big.Int)
+		amout = new(big.Int)
 	}
-	tx := types.NewTransaction(nonce, systemcontract.SysGovToAddr, amount, header.GasLimit, new(big.Int), propRLP)
+	tx := types.NewTransaction(nonce, systemcontract.SysGovToAddr, amout, header.GasLimit, new(big.Int), propRLP)
 	tx, err = c.signTxFn(accounts.Account{Address: c.validator}, tx, chain.Config().ChainID)
 	if err != nil {
 		return nil, nil, err
@@ -155,7 +154,7 @@ func (c *Congress) replayProposal(chain consensus.ChainHeaderReader, header *typ
 		return nil, err
 	}
 	if !bytes.Equal(propRLP, tx.Data()) {
-		return nil, fmt.Errorf("data mismatch, proposalID: %s, rlp: %s, txHash:%s, txData:%s", prop.Id.String(), hexutil.Encode(propRLP), tx.Hash().String(), hexutil.Encode(tx.Data()))
+		return nil, fmt.Errorf("data missmatch, proposalID: %s, rlp: %s, txHash:%s, txData:%s", prop.Id.String(), hexutil.Encode(propRLP), tx.Hash().String(), hexutil.Encode(tx.Data()))
 	}
 	//make system governance transaction
 	nonce := state.GetNonce(sender)
@@ -176,7 +175,7 @@ func (c *Congress) executeProposalMsg(chain consensus.ChainHeaderReader, header 
 	case 1:
 		// delete code action
 		ok := state.Erase(prop.To)
-		receipt = types.NewReceipt([]byte{}, !ok, header.GasUsed)
+		receipt = types.NewReceipt([]byte{}, ok != true, header.GasUsed)
 		log.Info("executeProposalMsg", "action", "erase", "id", prop.Id.String(), "to", prop.To, "txHash", txHash.String(), "success", ok)
 	default:
 		receipt = types.NewReceipt([]byte{}, true, header.GasUsed)
